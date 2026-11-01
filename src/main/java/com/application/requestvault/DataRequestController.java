@@ -1,5 +1,6 @@
 package com.application.requestvault;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
@@ -29,7 +30,7 @@ public class DataRequestController {
     }
 
     @PostMapping("/requests")
-    public DataRequest createRequest(@RequestBody CreateDataRequest input){
+    public DataRequest createRequest(@Valid @RequestBody CreateDataRequest input){
         DataRequest request = new DataRequest(
                 nextId.getAndIncrement(),
                 input.customerId(),
