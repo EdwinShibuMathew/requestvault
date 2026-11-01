@@ -5,11 +5,13 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.time.LocalDate;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 public class DataRequestController {
@@ -45,5 +47,16 @@ public class DataRequestController {
     @GetMapping("/requests")
     public List<DataRequest> getRequest(){
         return List.copyOf(requests);
+    }
+
+    @GetMapping("/requests/{id}")
+    public DataRequest getRequestById(@PathVariable("id") long id) {
+        return requests.stream()
+                .filter(request -> request.id() == id)
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Request not found"
+                ));
     }
 }
