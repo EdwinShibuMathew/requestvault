@@ -27,7 +27,8 @@ public class DataRequestController {
                 1L,
                 customerId,
                 LocalDate.of(2026, 10, 1),
-                LocalDate.of(2026, 10, 31)
+                LocalDate.of(2026, 10, 31),
+                RequestStatus.PENDING
         );
     }
 

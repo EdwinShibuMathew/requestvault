@@ -81,4 +81,17 @@ class DataRequestRepositoryTests {
                 () -> repository.create(input)
         );
     }
+
+    @Test
+    void newRequestsStartPending() {
+        CreateDataRequest input = new CreateDataRequest(
+                "customer-006",
+                LocalDate.of(2026, 10, 1),
+                LocalDate.of(2026, 10, 15)
+        );
+
+        DataRequest created = repository.create(input);
+
+        assertEquals(RequestStatus.PENDING, created.status());
+    }
 }

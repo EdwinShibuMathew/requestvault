@@ -24,13 +24,14 @@ public class DataRequestRepository {
                 row.getLong("id"),
                 row.getString("customer_id"),
                 row.getObject("from_date", LocalDate.class),
-                row.getObject("to_date", LocalDate.class)
+                row.getObject("to_date", LocalDate.class),
+                RequestStatus.valueOf(row.getString("status"))
         );
     }
 
     public List<DataRequest> findAll() {
         String sql = """
-        SELECT id, customer_id, from_date, to_date
+        SELECT id, customer_id, from_date, to_date, status
         FROM data_requests
         ORDER BY id
         """;
@@ -40,7 +41,7 @@ public class DataRequestRepository {
 
     public Optional<DataRequest> findById(long id) {
         String sql = """
-        SELECT id, customer_id, from_date, to_date
+        SELECT id, customer_id, from_date, to_date, status
         FROM data_requests
         WHERE id = ?
         """;
@@ -54,7 +55,7 @@ public class DataRequestRepository {
         String sql = """
         INSERT INTO data_requests (customer_id, from_date, to_date)
         VALUES (?, ?, ?)
-        RETURNING id, customer_id, from_date, to_date
+        RETURNING id, customer_id, from_date, to_date, status
         """;
 
         return jdbcTemplate.queryForObject(

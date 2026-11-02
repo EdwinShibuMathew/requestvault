@@ -6,6 +6,7 @@ public record DataRequest(
         long id,
         String customerId,
         LocalDate fromDate,
-        LocalDate toDate
+        LocalDate toDate,
+        RequestStatus status
 ){
 }

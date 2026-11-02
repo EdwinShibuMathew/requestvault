@@ -20,7 +20,8 @@ public class DataRequestServiceTests {
                 42L,
                 "customer-003",
                 LocalDate.of(2026, 10, 1),
-                LocalDate.of(2026, 10, 15)
+                LocalDate.of(2026, 10, 15),
+                RequestStatus.PENDING
         );
 
         when(repository.findById(42L))
@@ -60,7 +61,8 @@ public class DataRequestServiceTests {
                 42L,
                 input.customerId(),
                 input.fromDate(),
-                input.toDate()
+                input.toDate(),
+                RequestStatus.PENDING
         );
 
         when(repository.create(input)).thenReturn(expected);
