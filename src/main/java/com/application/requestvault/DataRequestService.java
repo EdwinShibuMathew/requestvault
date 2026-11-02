@@ -3,35 +3,26 @@ package com.application.requestvault;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class DataRequestService {
 
-    private final List<DataRequest> requests = new CopyOnWriteArrayList<>();
-    private final AtomicLong nextId = new AtomicLong(1);
+    private final DataRequestRepository repository;
 
-    public DataRequest createRequest(CreateDataRequest input){
-        DataRequest request = new DataRequest(
-                nextId.getAndIncrement(),
-                input.customerId(),
-                input.fromDate(),
-                input.toDate()
-        );
-
-        requests.add(request);
-        return request;
+    public DataRequestService(DataRequestRepository repository) {
+        this.repository = repository;
     }
 
-    public List<DataRequest> getRequests(){
-        return List.copyOf(requests);
+    public DataRequest createRequest(CreateDataRequest input) {
+        return repository.create(input);
     }
 
-    public Optional<DataRequest> getRequestById(long id){
-        return requests.stream()
-                .filter(request -> request.id() == id)
-                .findFirst();
+    public List<DataRequest> getRequests() {
+        return repository.findAll();
+    }
+
+    public Optional<DataRequest> getRequestById(long id) {
+        return repository.findById(id);
     }
 
 }

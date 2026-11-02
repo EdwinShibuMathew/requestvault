@@ -2,40 +2,53 @@ package com.application.requestvault;
 
 import java.time.LocalDate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.mock;
+import java.util.Optional;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 public class DataRequestServiceTests {
 
     @Test
-    void createdRequestCanBeRetrievedById() {
-        DataRequestService service = new DataRequestService();
+    void requestLookupReturnsRepositoryResult() {
+        DataRequestRepository repository = mock(DataRequestRepository.class);
+        DataRequestService service = new DataRequestService(repository);
 
-        CreateDataRequest input = new CreateDataRequest(
+        DataRequest expected = new DataRequest(
+                42L,
                 "customer-003",
                 LocalDate.of(2026, 10, 1),
                 LocalDate.of(2026, 10, 15)
         );
 
-        DataRequest created = service.createRequest(input);
+        when(repository.findById(42L))
+                .thenReturn(Optional.of(expected));
 
-        DataRequest retrieved = service.getRequestById(created.id())
-                .orElseThrow();
+        Optional<DataRequest> actual = service.getRequestById(42L);
 
-        assertEquals(created, retrieved);
+        assertEquals(Optional.of(expected), actual);
+        verify(repository).findById(42L);
     }
 
     @Test
     void unknownRequestIdReturnsEmpty() {
-        DataRequestService service = new DataRequestService();
+        DataRequestRepository repository = mock(DataRequestRepository.class);
+        DataRequestService service = new DataRequestService(repository);
+
+        when(repository.findById(999L))
+                .thenReturn(Optional.empty());
 
         assertTrue(service.getRequestById(999L).isEmpty());
+
+        verify(repository).findById(999L);
     }
 
     @Test
-    void createdRequestHaveDifferentIds() {
-        DataRequestService service = new DataRequestService();
+    void createRequestReturnsRepositoryResult() {
+        DataRequestRepository repository = mock(DataRequestRepository.class);
+        DataRequestService service = new DataRequestService(repository);
 
         CreateDataRequest input = new CreateDataRequest(
                 "customer-003",
@@ -43,11 +56,18 @@ public class DataRequestServiceTests {
                 LocalDate.of(2026, 10, 15)
         );
 
-        DataRequest createdFirst = service.createRequest(input);
-        DataRequest createdSecond = service.createRequest(input);
+        DataRequest expected = new DataRequest(
+                42L,
+                input.customerId(),
+                input.fromDate(),
+                input.toDate()
+        );
 
+        when(repository.create(input)).thenReturn(expected);
 
-        assertNotEquals(createdFirst.id(), createdSecond.id());
+        DataRequest actual = service.createRequest(input);
 
+        assertEquals(expected, actual);
+        verify(repository).create(input);
     }
 }
