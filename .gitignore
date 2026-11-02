@@ -34,3 +34,6 @@ build/
 
 ### Windows download metadata ###
 *:Zone.Identifier
+
+# Local environment settings
+.env
