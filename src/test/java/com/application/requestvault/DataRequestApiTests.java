@@ -80,4 +80,30 @@ class DataRequestApiTests {
             );
         }
     }
+
+    @Test
+    void validRequestIsAccepted() throws Exception {
+        String body = """
+        {
+            "customerId": "customer-005",
+            "fromDate": "2026-10-01",
+            "toDate": "2026-10-15"
+        }
+        """;
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/requests"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+
+        try (HttpClient client = HttpClient.newHttpClient()) {
+            HttpResponse<String> response = client.send(
+                    request,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+
+            assertEquals(200, response.statusCode());
+        }
+    }
 }
