@@ -2,8 +2,6 @@ package com.application.requestvault;
 
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicLong;
 import java.time.LocalDate;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,9 +13,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 public class DataRequestController {
+    private final DataRequestService dataRequestService;
 
-    private final List<DataRequest> requests = new CopyOnWriteArrayList<>();
-    private final AtomicLong nextId = new AtomicLong(1);
+    public DataRequestController(DataRequestService dataRequestService) {
+        this.dataRequestService = dataRequestService;
+    }
 
     @GetMapping("/customer/{customerId}/requests/sample")
     public DataRequest getSampleRequest(
@@ -33,27 +33,17 @@ public class DataRequestController {
 
     @PostMapping("/requests")
     public DataRequest createRequest(@Valid @RequestBody CreateDataRequest input){
-        DataRequest request = new DataRequest(
-                nextId.getAndIncrement(),
-                input.customerId(),
-                input.fromDate(),
-                input.toDate()
-        );
-
-        requests.add(request);
-        return request;
+        return dataRequestService.createRequest(input);
     }
 
     @GetMapping("/requests")
     public List<DataRequest> getRequest(){
-        return List.copyOf(requests);
+        return dataRequestService.getRequests();
     }
 
     @GetMapping("/requests/{id}")
     public DataRequest getRequestById(@PathVariable("id") long id) {
-        return requests.stream()
-                .filter(request -> request.id() == id)
-                .findFirst()
+        return dataRequestService.getRequestById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     "Request not found"
