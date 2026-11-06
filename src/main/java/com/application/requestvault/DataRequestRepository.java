@@ -67,4 +67,20 @@ public class DataRequestRepository {
         );
     }
 
+    public boolean updateStatusIfPending(long id, RequestStatus newStatus) {
+        String sql = """
+        UPDATE data_requests
+        SET status = ?
+        WHERE id = ? AND status = 'PENDING'
+        """;
+
+        int updatedRows = jdbcTemplate.update(
+                sql,
+                newStatus.name(),
+                id
+        );
+
+        return updatedRows == 1;
+    }
+
 }

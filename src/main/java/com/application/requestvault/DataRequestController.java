@@ -50,4 +50,9 @@ public class DataRequestController {
                     "Request not found"
                 ));
     }
+
+    @PostMapping("/requests/{id}/approve")
+    public DataRequest approveRequest(@PathVariable("id") long id) {
+        return dataRequestService.approveRequest(id);
+    }
 }

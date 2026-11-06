@@ -25,4 +25,20 @@ public class ApiExceptionHandler {
                 errors
         );
     }
+
+    @ExceptionHandler(RequestNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiErrorResponse handleRequestNotFound(
+            RequestNotFoundException exception) {
+
+        return new ApiErrorResponse(exception.getMessage());
+    }
+
+    @ExceptionHandler(RequestAlreadyDecidedException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiErrorResponse handleRequestAlreadyDecided(
+            RequestAlreadyDecidedException exception) {
+
+        return new ApiErrorResponse(exception.getMessage());
+    }
 }

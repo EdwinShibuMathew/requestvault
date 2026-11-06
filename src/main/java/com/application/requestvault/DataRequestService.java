@@ -17,6 +17,22 @@ public class DataRequestService {
         return repository.create(input);
     }
 
+    public DataRequest approveRequest(long id) {
+        boolean updated = repository.updateStatusIfPending(
+                id,
+                RequestStatus.APPROVED
+        );
+
+        DataRequest request = repository.findById(id)
+                .orElseThrow(() -> new RequestNotFoundException(id));
+
+        if (!updated) {
+            throw new RequestAlreadyDecidedException(id);
+        }
+
+        return request;
+    }
+
     public List<DataRequest> getRequests() {
         return repository.findAll();
     }

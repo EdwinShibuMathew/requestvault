@@ -14,6 +14,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -93,5 +95,95 @@ class DataRequestRepositoryTests {
         DataRequest created = repository.create(input);
 
         assertEquals(RequestStatus.PENDING, created.status());
+    }
+
+    @Test
+    void pendingRequestCanBeApproved() {
+        CreateDataRequest input = new CreateDataRequest(
+                "customer-007",
+                LocalDate.of(2026, 10, 1),
+                LocalDate.of(2026, 10, 15)
+        );
+
+        DataRequest created = repository.create(input);
+
+        boolean updated = repository.updateStatusIfPending(
+                created.id(),
+                RequestStatus.APPROVED
+        );
+
+        assertTrue(updated);
+
+        DataRequest retrieved = repository.findById(created.id())
+                .orElseThrow();
+
+        assertEquals(RequestStatus.APPROVED, retrieved.status());
+    }
+
+    @Test
+    void approvedRequestCannotBeRejected() {
+        CreateDataRequest input = new CreateDataRequest(
+                "customer-007",
+                LocalDate.of(2026, 10, 1),
+                LocalDate.of(2026, 10, 15)
+        );
+
+        DataRequest created = repository.create(input);
+
+        boolean updated = repository.updateStatusIfPending(
+                created.id(),
+                RequestStatus.APPROVED
+        );
+
+        assertTrue(updated);
+
+        boolean updatedToRejected = repository.updateStatusIfPending(
+                created.id(),
+                RequestStatus.REJECTED
+        );
+        assertFalse(updatedToRejected);
+
+        DataRequest retrieved = repository.findById(created.id())
+                .orElseThrow();
+
+        assertEquals(RequestStatus.APPROVED, retrieved.status());
+
+    }
+
+    @Test
+    void rejectedRequestCannotBeApproved() {
+        CreateDataRequest input = new CreateDataRequest(
+                "customer-007",
+                LocalDate.of(2026, 10, 1),
+                LocalDate.of(2026, 10, 15)
+        );
+
+        DataRequest created = repository.create(input);
+
+        boolean updated = repository.updateStatusIfPending(
+                created.id(),
+                RequestStatus.REJECTED
+        );
+
+        assertTrue(updated);
+
+        boolean updatedToApproved = repository.updateStatusIfPending(
+                created.id(),
+                RequestStatus.APPROVED
+        );
+        assertFalse(updatedToApproved);
+
+        DataRequest retrieved = repository.findById(created.id())
+                .orElseThrow();
+
+        assertEquals(RequestStatus.REJECTED, retrieved.status());
+    }
+
+    @Test
+    void missingRequestCannotBeUpdated() {
+        assertFalse(repository.updateStatusIfPending(
+                -1L,
+                RequestStatus.APPROVED
+        ));
     }
 }
