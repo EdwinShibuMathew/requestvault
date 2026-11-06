@@ -312,4 +312,25 @@ class DataRequestApiTests {
             );
         }
     }
+
+    @Test
+    void gettingMissingRequestReturnsNotFound() throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/requests/-1"))
+                .GET()
+                .build();
+
+        try (HttpClient client = HttpClient.newHttpClient()) {
+            HttpResponse<String> response = client.send(
+                    request,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+
+            assertEquals(404, response.statusCode());
+            assertTrue(
+                    response.body().contains("Request -1 was not found"),
+                    "The response should explain that the request is missing"
+            );
+        }
+    }
 }
