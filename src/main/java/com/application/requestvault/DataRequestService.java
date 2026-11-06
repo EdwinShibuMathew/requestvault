@@ -33,6 +33,22 @@ public class DataRequestService {
         return request;
     }
 
+    public DataRequest rejectRequest(long id) {
+        boolean updated = repository.updateStatusIfPending(
+                id,
+                RequestStatus.REJECTED
+        );
+
+        DataRequest request = repository.findById(id)
+                .orElseThrow(() -> new RequestNotFoundException(id));
+
+        if (!updated) {
+            throw new RequestAlreadyDecidedException(id);
+        }
+
+        return request;
+    }
+
     public List<DataRequest> getRequests() {
         return repository.findAll();
     }

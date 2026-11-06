@@ -55,4 +55,9 @@ public class DataRequestController {
     public DataRequest approveRequest(@PathVariable("id") long id) {
         return dataRequestService.approveRequest(id);
     }
+
+    @PostMapping("/requests/{id}/reject")
+    public DataRequest rejectRequest(@PathVariable("id") long id) {
+        return dataRequestService.rejectRequest(id);
+    }
 }

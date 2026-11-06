@@ -141,4 +141,75 @@ public class DataRequestServiceTests {
                 () -> service.approveRequest(42L)
         );
     }
+
+    @Test
+    void pendingRequestCanBeRejected() {
+        DataRequestRepository repository = mock(DataRequestRepository.class);
+        DataRequestService service = new DataRequestService(repository);
+
+        DataRequest rejected = new DataRequest(
+                43L,
+                "customer-007",
+                LocalDate.of(2026, 10, 1),
+                LocalDate.of(2026, 10, 15),
+                RequestStatus.REJECTED
+        );
+
+        when(repository.updateStatusIfPending(43L, RequestStatus.REJECTED))
+                .thenReturn(true);
+
+        when(repository.findById(43L))
+                .thenReturn(Optional.of(rejected));
+
+        DataRequest result = service.rejectRequest(43L);
+
+        assertEquals(rejected, result);
+        verify(repository).updateStatusIfPending(43L, RequestStatus.REJECTED);
+        verify(repository).findById(43L);
+    }
+
+    @Test
+    void rejectingMissingRequestThrowsNotFound() {
+        DataRequestRepository repository = mock(DataRequestRepository.class);
+        DataRequestService service = new DataRequestService(repository);
+
+        when(repository.updateStatusIfPending(999L, RequestStatus.REJECTED))
+                .thenReturn(false);
+
+        when(repository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                RequestNotFoundException.class,
+                () -> service.rejectRequest(999L)
+        );
+    }
+
+    @Test
+    void rejectingApprovedRequestThrowsAlreadyDecided() {
+        DataRequestRepository repository = mock(DataRequestRepository.class);
+        DataRequestService service = new DataRequestService(repository);
+
+        DataRequest approved = new DataRequest(
+                43L,
+                "customer-008",
+                LocalDate.of(2026, 10, 1),
+                LocalDate.of(2026, 10, 15),
+                RequestStatus.APPROVED
+        );
+
+        when(repository.updateStatusIfPending(43L, RequestStatus.REJECTED))
+                .thenReturn(false);
+
+        when(repository.findById(43L))
+                .thenReturn(Optional.of(approved));
+
+        assertThrows(
+                RequestAlreadyDecidedException.class,
+                () -> service.rejectRequest(43L)
+        );
+
+        verify(repository).updateStatusIfPending(43L, RequestStatus.REJECTED);
+    }
+
 }

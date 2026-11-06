@@ -220,4 +220,96 @@ class DataRequestApiTests {
 
         assertEquals(RequestStatus.APPROVED, stored.status());
     }
+
+    @Test
+    void pendingRequestCanBeRejected() throws Exception {
+        DataRequest created = repository.create(new CreateDataRequest(
+                "customer-test",
+                java.time.LocalDate.of(2026, 10, 1),
+                java.time.LocalDate.of(2026, 10, 15)
+        ));
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(
+                        "http://localhost:" + port
+                                + "/requests/" + created.id() + "/reject"
+                ))
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .build();
+
+        try (HttpClient client = HttpClient.newHttpClient()) {
+            HttpResponse<String> response = client.send(
+                    request,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+
+            assertEquals(200, response.statusCode());
+
+            DataRequest stored = repository.findById(created.id())
+                    .orElseThrow();
+
+            assertEquals(RequestStatus.REJECTED, stored.status());
+        }
+    }
+
+    @Test
+    void rejectingApprovedRequestReturnsConflict() throws Exception {
+        DataRequest created = repository.create(new CreateDataRequest(
+                "customer-rejection-test-already-approved",
+                java.time.LocalDate.of(2026, 10, 1),
+                java.time.LocalDate.of(2026, 10, 15)
+        ));
+
+        boolean updated = repository.updateStatusIfPending(
+                created.id(),
+                RequestStatus.APPROVED
+        );
+
+        assertTrue(updated);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/requests/" + created.id()+ "/reject"))
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .build();
+
+        try (HttpClient client = HttpClient.newHttpClient()) {
+            HttpResponse<String> response = client.send(
+                    request,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+
+
+            assertEquals(409, response.statusCode());
+            assertTrue(
+                    response.body().contains("has already been approved or rejected")
+            );
+
+        }
+
+        DataRequest stored = repository.findById(created.id())
+                .orElseThrow();
+
+        assertEquals(RequestStatus.APPROVED, stored.status());
+    }
+
+    @Test
+    void rejectingMissingRequestReturnsNotFound() throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/requests/-1/reject"))
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .build();
+
+        try (HttpClient client = HttpClient.newHttpClient()) {
+            HttpResponse<String> response = client.send(
+                    request,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+
+            assertEquals(404, response.statusCode());
+            assertTrue(
+                    response.body().contains("Request -1 was not found"),
+                    "The response should explain that the request is missing"
+            );
+        }
+    }
 }
