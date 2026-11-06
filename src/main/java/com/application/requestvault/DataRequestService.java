@@ -18,26 +18,15 @@ public class DataRequestService {
     }
 
     public DataRequest approveRequest(long id) {
-        boolean updated = repository.updateStatusIfPending(
-                id,
-                RequestStatus.APPROVED
-        );
-
-        DataRequest request = repository.findById(id)
-                .orElseThrow(() -> new RequestNotFoundException(id));
-
-        if (!updated) {
-            throw new RequestAlreadyDecidedException(id);
-        }
-
-        return request;
+        return decideRequest(id, RequestStatus.APPROVED);
     }
 
     public DataRequest rejectRequest(long id) {
-        boolean updated = repository.updateStatusIfPending(
-                id,
-                RequestStatus.REJECTED
-        );
+        return decideRequest(id, RequestStatus.REJECTED);
+    }
+
+    private DataRequest decideRequest(long id, RequestStatus decision) {
+        boolean updated = repository.updateStatusIfPending(id, decision);
 
         DataRequest request = repository.findById(id)
                 .orElseThrow(() -> new RequestNotFoundException(id));
